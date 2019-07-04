@@ -358,7 +358,7 @@ let model: typeof modelApi;
 bootstrap = (factory, options = {}) => {
   const store = init(
     factory,
-    pick(options, ["plugins", "strict", "providers"])
+    pick(options, ["plugins", "strict", "services"])
   ) as EnhancedRootModel<any>;
 
   let unsub: () => void;

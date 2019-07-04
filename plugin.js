@@ -1,7 +1,7 @@
 import Vuex from "vuex";
 export default function install(Vue) {
-    var initStorePlugin = function () {
-        var options = this.$options;
+    const initStorePlugin = function () {
+        const options = this.$options;
         // store injection
         if (options.$) {
             this.$ = options.$;
