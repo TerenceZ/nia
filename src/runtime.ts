@@ -489,15 +489,19 @@ model = <typeof modelApi>(options => {
   const sagas = [] as Saga[];
 
   forOwn(options.sagas, (fn: Saga) => {
+    let wrapper = fn;
     if (process.env.NODE_ENV !== "production") {
-      Object.defineProperty(fn, "name", {
+      wrapper = function(this: any, ...args: any[]) {
+        return fn.apply(this, args);
+      };
+      Object.defineProperty(wrapper, "name", {
         configurable: true,
         writable: false,
         enumerable: false,
         value: nameCreator()(null, fn.name || uniqueId("service"))
       });
     }
-    sagas.push(fn);
+    sagas.push(wrapper);
   });
 
   // Check if actions conflict.
