@@ -1,11 +1,11 @@
 {
   "name": "vuex-nia",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A state manager based on vuex and redux-saga.",
   "scripts": {
-    "build:macro": "babel src/macro.js -o macro.js",
-    "build:runtime": "tsc --build",
-    "build": "npm run build:macro && npm run build:runtime"
+    "build:modern": "babel src/macro.js -o es5/macro.js && tsc --build tsconfig.es5.json",
+    "build:es5": "babel src/macro.js -o macro.js && tsc --build tsconfig.json",
+    "build": "npm run build:modern && npm run build:es5"
   },
   "repository": {
     "type": "git",

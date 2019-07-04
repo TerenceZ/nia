@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var vuex_1 = require("vuex");
-function install(Vue) {
-    var initStorePlugin = function () {
-        var options = this.$options;
+import Vuex from "vuex";
+export default function install(Vue) {
+    const initStorePlugin = function () {
+        const options = this.$options;
         // store injection
         if (options.$) {
             this.$ = options.$;
@@ -13,6 +11,5 @@ function install(Vue) {
         }
     };
     Vue.mixin({ beforeCreate: initStorePlugin });
-    Vue.use(vuex_1.default);
+    Vue.use(Vuex);
 }
-exports.default = install;
