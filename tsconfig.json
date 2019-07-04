@@ -11,6 +11,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
+    "declaration": true,
+    "declarationDir": ".",
     "outDir": "."
   },
   "include": ["src", "types"],
