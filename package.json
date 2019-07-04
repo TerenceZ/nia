@@ -1,0 +1,42 @@
+{
+  "name": "vuex-nia",
+  "version": "0.0.1",
+  "description": "A state manager based on vuex and redux-saga.",
+  "typings": "types/api.d.ts",
+  "scripts": {
+    "build:macro": "babel src/macro.js -o dist/macro.js",
+    "build:runtime": "tsc --build",
+    "build": "npm run build:macro && npm run build:runtime"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TerenceZ/nia.git"
+  },
+  "keywords": [
+    "vuex",
+    "redux-saga",
+    "state-manager"
+  ],
+  "author": "TerenceZ",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "@types/lodash": "^4.14.135",
+    "@types/node": "^12.0.12",
+    "typescript": "^3.5.2",
+    "vue": "^2.6.10",
+    "vuex": "^3.1.1"
+  },
+  "peerDependencies": {
+    "babel-plugin-macros": "^2.6.1",
+    "vue": "^2.6.10",
+    "vuex": "^3.1.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.11",
+    "redux-saga": "^1.0.5",
+    "vue-tsx.macro": "^0.3.5"
+  }
+}
