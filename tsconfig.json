@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
-    "outDir": "dist"
+    "outDir": "."
   },
   "include": ["src", "types"],
   "exclude": ["node_modules"]

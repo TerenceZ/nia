@@ -1,10 +1,10 @@
 {
   "name": "vuex-nia",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A state manager based on vuex and redux-saga.",
   "typings": "types/api.d.ts",
   "scripts": {
-    "build:macro": "babel src/macro.js -o dist/macro.js",
+    "build:macro": "babel src/macro.js -o macro.js",
     "build:runtime": "tsc --build",
     "build": "npm run build:macro && npm run build:runtime"
   },
