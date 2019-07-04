@@ -104,6 +104,7 @@ export type GetterContext<Data, State, Getters> = {
   data: Data;
   state: State;
   getters: Getters;
+  services: Services;
 };
 
 export type GettersDefinition<
