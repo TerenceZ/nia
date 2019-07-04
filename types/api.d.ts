@@ -6,11 +6,11 @@ import {
   CombineGetters,
   CombineActionCreators
 } from "./model";
-import { ModelOptions, StoreExtraOptions, Services } from "./options";
+import { ModelOptions, StoreExtraOptions, Services, SERVICES } from "./options";
 import { RunSagaOptions } from "redux-saga";
 
 export interface ServicesOptions {
-  services?: Services;
+  services?: Omit<Services, typeof SERVICES>;
 }
 
 export interface BootstrapOptions

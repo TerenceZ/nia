@@ -8,7 +8,7 @@ import {
   ActionDispatcher
 } from "./model";
 
-declare const SERVICES: unique symbol;
+export declare const SERVICES: unique symbol;
 
 export interface Services {
   [SERVICES]: true;

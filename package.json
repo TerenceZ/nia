@@ -1,6 +1,6 @@
 {
   "name": "vuex-nia",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A state manager based on vuex and redux-saga.",
   "typings": "types/api.d.ts",
   "scripts": {
