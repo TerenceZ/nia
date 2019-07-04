@@ -1,51 +1,80 @@
-import { Store } from "vuex";
-import { merge, map, mapKeys, mapValues, uniqueId, forOwn, isFunction, keys, intersection, forEach, reduce, filter, concat, noop, isArray, reverse, compact, assign, pick } from "lodash";
-import { stdChannel, END, runSaga } from "redux-saga";
-import { fork, all, take } from "redux-saga/effects";
-import assert from "assert";
+"use strict";
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var vuex_1 = require("vuex");
+var lodash_1 = require("lodash");
+var redux_saga_1 = require("redux-saga");
+var effects_1 = require("redux-saga/effects");
+var assert_1 = require("assert");
 function isGeneratorFunction(fn) {
     return Object.prototype.toString.call(fn) === "[object GeneratorFunction]";
 }
 function createIO(store, channel) {
     return {
-        channel,
+        channel: channel,
         dispatch: createModelDispatcher(process.env.NODE_ENV !== "production" ? "root" : "", store)
     };
 }
 function createModelDispatcher(namespace, store) {
-    const fn = (action) => store.dispatch(action);
+    var fn = function (action) { return store.dispatch(action); };
     if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(fn, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `model/dispach:${namespace}`
+            value: "model/dispach:" + namespace
         });
     }
     return fn;
 }
 function createActionDispatcher(store, type) {
-    const fn = (payload) => store.dispatch({ type, payload });
+    var fn = function (payload) { return store.dispatch({ type: type, payload: payload }); };
     if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(fn, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `action/dispatch:${type}`
+            value: "action/dispatch:" + type
         });
     }
     return fn;
 }
 function createEffectsStoreActions(effects, keyMap, context) {
-    const dispatcher = (store_, action) => {
+    var dispatcher = function (store_, action) {
         context.c.put(action);
     };
-    return reduce(keyMap, (actions, key, name) => {
-        let fn;
+    return lodash_1.reduce(keyMap, function (actions, key, name) {
+        var fn;
         if (isGeneratorFunction(effects[name])) {
             fn =
                 process.env.NODE_ENV !== "production"
-                    ? createSagaDispatcher(context, `effect/dispatch:${key}`)
+                    ? createSagaDispatcher(context, "effect/dispatch:" + key)
                     : dispatcher;
         }
         else {
@@ -56,19 +85,19 @@ function createEffectsStoreActions(effects, keyMap, context) {
     }, {});
 }
 function createServicesStoreActions(keyMap, context) {
-    const dispatcher = (store_, action) => {
+    var dispatcher = function (store_, action) {
         context.c.put(action);
     };
-    return reduce(keyMap, (actions, key) => {
+    return lodash_1.reduce(keyMap, function (actions, key) {
         actions[key] =
             process.env.NODE_ENV !== "production"
-                ? createSagaDispatcher(context, `service/dispatch:${key}`)
+                ? createSagaDispatcher(context, "service/dispatch:" + key)
                 : dispatcher;
         return actions;
     }, {});
 }
 function createMutationEffect(name, type, context) {
-    const fn = (store, action) => {
+    var fn = function (store, action) {
         store.commit(type, action.payload);
         context.c.put(action);
     };
@@ -77,16 +106,18 @@ function createMutationEffect(name, type, context) {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `mutation/effect:${name}`
+            value: "mutation/effect:" + name
         });
     }
     return fn;
 }
 function createMutationsStoreActions(effectKeyMap, mutationKeyMap, context) {
-    return mapKeys(mapValues(mutationKeyMap, (mutationKey, name) => createMutationEffect(name, mutationKey, context)), (fn_, name) => effectKeyMap[name]);
+    return lodash_1.mapKeys(lodash_1.mapValues(mutationKeyMap, function (mutationKey, name) {
+        return createMutationEffect(name, mutationKey, context);
+    }), function (fn_, name) { return effectKeyMap[name]; });
 }
 function createActionEffect(name, type, context) {
-    const fn = (store, action) => {
+    var fn = function (store, action) {
         context.c.put(action);
     };
     if (process.env.NODE_ENV !== "production") {
@@ -94,41 +125,43 @@ function createActionEffect(name, type, context) {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `action/effect:${name}`
+            value: "action/effect:" + name
         });
     }
     return fn;
 }
 function createActionsStoreActions(keyMap, context) {
-    return mapKeys(mapValues(keyMap, (key, name) => createActionEffect(name, key, context)), (fn_, name) => keyMap[name]);
+    return lodash_1.mapKeys(lodash_1.mapValues(keyMap, function (key, name) { return createActionEffect(name, key, context); }), function (fn_, name) { return keyMap[name]; });
 }
 function wrapGetter(fn, context, name) {
-    const wrapped = () => fn.call(context.m, context.m);
+    var wrapped = function () { return fn.call(context.m, context.m); };
     if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(wrapped, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `getter:${name}`
+            value: "getter:" + name
         });
     }
     return wrapped;
 }
 function wrapMutation(fn, context, name) {
-    const wrapped = (state_, payload) => fn.call(context.m, context.m, payload);
+    var wrapped = function (state_, payload) {
+        return fn.call(context.m, context.m, payload);
+    };
     if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(wrapped, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `mutation:${name}`
+            value: "mutation:" + name
         });
     }
     return wrapped;
 }
 function wrapEffect(fn, context, name) {
-    const wrapped = (store_, action) => {
-        const res = fn.call(context.m, context.m, action.payload);
+    var wrapped = function (store_, action) {
+        var res = fn.call(context.m, context.m, action.payload);
         context.c.put(action);
         return res;
     };
@@ -137,13 +170,13 @@ function wrapEffect(fn, context, name) {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `effect:${name}`
+            value: "effect:" + name
         });
     }
     return wrapped;
 }
 function createSagaDispatcher(context, name) {
-    const dispatcher = (vctx_, action) => {
+    var dispatcher = function (vctx_, action) {
         context.c.put(action);
     };
     if (process.env.NODE_ENV !== "production" && name) {
@@ -157,62 +190,84 @@ function createSagaDispatcher(context, name) {
     return dispatcher;
 }
 function createModelSagas(services, effects, keyMap) {
-    return concat(map(effects, (effect, name) => [keyMap[name], effect]), map(services, service => [null, service]));
+    return lodash_1.concat(lodash_1.map(effects, function (effect, name) { return [keyMap[name], effect]; }), lodash_1.map(services, function (service) { return [null, service]; }));
 }
 function wrapForkSaga(saga, context, key) {
-    const wrapped = (action) => fork([context.m, saga], context.m, action.payload);
+    var wrapped = function (action) {
+        return effects_1.fork([context.m, saga], context.m, action.payload);
+    };
     if (process.env.NODE_ENV !== "production" && (key || saga.name)) {
         Object.defineProperty(wrapped, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `saga/fork:${key || saga.name}`
+            value: "saga/fork:" + (key || saga.name)
         });
     }
     return wrapped;
 }
-function* noeff() {
-    // do nothing.
+function noeff() {
+    return __generator(this, function (_a) {
+        return [2 /*return*/];
+    });
 }
 function combineSubscriptions(subs) {
-    subs = filter(subs, sub => sub !== noop);
+    subs = lodash_1.filter(subs, function (sub) { return sub !== lodash_1.noop; });
     if (!subs.length) {
-        return noop;
+        return lodash_1.noop;
     }
     if (subs.length === 1) {
         return subs[0];
     }
-    return () => {
-        const unsubs = reverse(compact(map(subs, sub => sub())));
+    return function () {
+        var unsubs = lodash_1.reverse(lodash_1.compact(lodash_1.map(subs, function (sub) { return sub(); })));
         return unsubs.length
-            ? () => {
-                forEach(unsubs, unsub => unsub());
+            ? function () {
+                lodash_1.forEach(unsubs, function (unsub) { return unsub(); });
             }
-            : noop;
+            : lodash_1.noop;
     };
 }
 function combineSagas(sagas, context) {
-    sagas = filter(map(sagas, effect => {
-        let fn;
-        if (isArray(effect)) {
-            const [type, eff] = effect;
-            const fork = wrapForkSaga(eff, context, type);
+    sagas = lodash_1.filter(lodash_1.map(sagas, function (effect) {
+        var fn;
+        if (lodash_1.isArray(effect)) {
+            var type_1 = effect[0], eff = effect[1];
+            var fork_1 = wrapForkSaga(eff, context, type_1);
             fn =
-                type != null
-                    ? function* () {
-                        while (true) {
-                            yield fork(yield take(type));
-                        }
+                type_1 != null
+                    ? function () {
+                        var _a;
+                        return __generator(this, function (_b) {
+                            switch (_b.label) {
+                                case 0:
+                                    if (!true) return [3 /*break*/, 3];
+                                    _a = fork_1;
+                                    return [4 /*yield*/, effects_1.take(type_1)];
+                                case 1: return [4 /*yield*/, _a.apply(void 0, [_b.sent()])];
+                                case 2:
+                                    _b.sent();
+                                    return [3 /*break*/, 0];
+                                case 3: return [2 /*return*/];
+                            }
+                        });
                     }
-                    : function* () {
-                        yield fork({});
+                    : function () {
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0: return [4 /*yield*/, fork_1({})];
+                                case 1:
+                                    _a.sent();
+                                    return [2 /*return*/];
+                            }
+                        });
                     };
             if (process.env.NODE_ENV !== "production") {
                 Object.defineProperty(fn, "name", {
                     configurable: true,
                     enumerable: false,
                     writable: false,
-                    value: `saga/daemon:${type || eff.name || uniqueId("service")}`
+                    value: "saga/daemon:" + (type_1 || eff.name || lodash_1.uniqueId("service"))
                 });
             }
         }
@@ -220,28 +275,40 @@ function combineSagas(sagas, context) {
             fn = effect;
         }
         return fn;
-    }), saga => saga !== noeff);
+    }), function (saga) { return saga !== noeff; });
     if (!sagas.length) {
         return noeff;
     }
     if (sagas.length === 1) {
         return sagas[0];
     }
-    return function* saga() {
-        yield all(map(sagas, saga => saga()));
+    return function saga() {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, effects_1.all(lodash_1.map(sagas, function (saga) { return saga(); }))];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
     };
 }
 // API declaration
-let bootstrap;
-let init;
-let hotReload;
-let model;
+var bootstrap;
+exports.bootstrap = bootstrap;
+var init;
+exports.init = init;
+var hotReload;
+exports.hotReload = hotReload;
+var model;
+exports.model = model;
 // API: bootstrap()
-bootstrap = (factory, options = {}) => {
-    const store = init(factory, pick(options, ["plugins", "strict", "services"]));
-    let unsub;
-    let stopped = false;
-    store.stop = () => {
+exports.bootstrap = bootstrap = function (factory, options) {
+    if (options === void 0) { options = {}; }
+    var store = init(factory, lodash_1.pick(options, ["plugins", "strict", "services"]));
+    var unsub;
+    var stopped = false;
+    store.stop = function () {
         if (process.env.NODE_ENV !== "production") {
             if (stopped) {
                 throw new Error("[PANIC] Cannot invoke RootModel::stop() more than once.");
@@ -251,49 +318,51 @@ bootstrap = (factory, options = {}) => {
         if (unsub) {
             unsub();
         }
-        store.io.channel.put(END);
+        store.io.channel.put(redux_saga_1.END);
     };
-    store.hotReload = (nextFactory) => {
+    store.hotReload = function (nextFactory) {
         store.stop();
         stopped = false;
         hotReload(store, nextFactory);
-        runSaga(assign({}, store.io, options.saga), store.service);
+        redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), store.service);
         unsub = store.subscribe();
     };
-    runSaga(assign({}, store.io, options.saga), store.saga);
+    redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), store.saga);
     unsub = store.subscribe();
     return store;
 };
 // API: init()
-init = (factory, options = {}) => {
-    const { store: storeOptions, bind } = factory.configure();
-    const store = new Store(assign({
+exports.init = init = function (factory, options) {
+    if (options === void 0) { options = {}; }
+    var _a = factory.configure(), storeOptions = _a.store, bind = _a.bind;
+    var store = new vuex_1.Store(lodash_1.assign({
         plugins: options.plugins,
         strict: options.strict
     }, storeOptions));
-    const channel = stdChannel();
-    const model = bind({
+    var channel = redux_saga_1.stdChannel();
+    var model = bind({
         namespace: [],
         services: options.services,
         state: store.state,
-        store,
-        channel
+        store: store,
+        channel: channel
     });
     model.store = store;
     model.io = createIO(store, channel);
     return model;
 };
 // API: hotReload()
-hotReload = (model, factory, options = {}) => {
-    const { store: storeOptions, bind } = factory.configure();
-    const channel = stdChannel();
+exports.hotReload = hotReload = function (model, factory, options) {
+    if (options === void 0) { options = {}; }
+    var _a = factory.configure(), storeOptions = _a.store, bind = _a.bind;
+    var channel = redux_saga_1.stdChannel();
     model.store.hotUpdate(storeOptions);
-    const nextModel = bind({
+    var nextModel = bind({
         namespace: [],
         services: options.services,
         state: model.store.state,
         store: model.store,
-        channel
+        channel: channel
     });
     model.actions = nextModel.actions;
     model.getters = nextModel.getters;
@@ -303,93 +372,106 @@ hotReload = (model, factory, options = {}) => {
     model.io = createIO(model.store, channel);
 };
 // API: model()
-model = (options => {
-    let prefix = "";
+exports.model = model = (function (options) {
+    var prefix = "";
     if (process.env.NODE_ENV != "production") {
         prefix = options.__prefix;
     }
-    const modules = options.modules;
+    var modules = options.modules;
     // name creator.
-    const nameCreator = (category) => (_, key) => process.env.NODE_ENV !== "production"
-        ? `${category || ""}${prefix}/${key}`
-        : uniqueId();
+    var nameCreator = function (category) { return function (_, key) {
+        return process.env.NODE_ENV !== "production"
+            ? "" + (category || "") + prefix + "/" + key
+            : lodash_1.uniqueId();
+    }; };
     // Generate getter keys.
-    const getters = options.getters;
-    const getterKeyMap = mapValues(getters, nameCreator());
+    var getters = options.getters;
+    var getterKeyMap = lodash_1.mapValues(getters, nameCreator());
     // Generate action action keys.
-    const actionsActionKeyMap = mapValues((options.actions || {}), nameCreator(process.env.NODE_ENV !== "production" ? "action/action:" : ""));
+    var actionsActionKeyMap = lodash_1.mapValues((options.actions || {}), nameCreator(process.env.NODE_ENV !== "production" ? "action/action:" : ""));
     // Generate mutation action keys.
-    const mutations = options.mutations;
-    const mutationActionKeyMap = mapValues(mutations, nameCreator(process.env.NODE_ENV !== "production" ? "mutation:" : ""));
+    var mutations = options.mutations;
+    var mutationActionKeyMap = lodash_1.mapValues(mutations, nameCreator(process.env.NODE_ENV !== "production" ? "mutation:" : ""));
     // Generate mutation effects.
-    const mutationEffectActionKeyMap = mapValues(mutations, nameCreator(process.env.NODE_ENV !== "production" ? "action/mutation:" : ""));
+    var mutationEffectActionKeyMap = lodash_1.mapValues(mutations, nameCreator(process.env.NODE_ENV !== "production" ? "action/mutation:" : ""));
     // Generate effect action keys from effects and mutatons.
-    const effects = options.effects;
-    const effectActionKeyMap = mapValues(effects, nameCreator(process.env.NODE_ENV !== "production" ? "action/effect:" : ""));
+    var effects = options.effects;
+    var effectActionKeyMap = lodash_1.mapValues(effects, nameCreator(process.env.NODE_ENV !== "production" ? "action/effect:" : ""));
     // Resolve sagas.
-    const sagas = [];
-    forOwn(options.sagas, (fn) => {
-        let wrapper = fn;
+    var sagas = [];
+    lodash_1.forOwn(options.sagas, function (fn) {
+        var wrapper = fn;
         if (process.env.NODE_ENV !== "production") {
-            wrapper = function (...args) {
+            wrapper = function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
                 return fn.apply(this, args);
             };
             Object.defineProperty(wrapper, "name", {
                 configurable: true,
                 writable: false,
                 enumerable: false,
-                value: nameCreator()(null, fn.name || uniqueId("service"))
+                value: nameCreator()(null, fn.name || lodash_1.uniqueId("service"))
             });
         }
         sagas.push(wrapper);
     });
     // Check if actions conflict.
     if (process.env.NODE_ENV !== "production") {
-        const conflicts = intersection(keys(actionsActionKeyMap), keys(mutationEffectActionKeyMap), keys(effectActionKeyMap), keys(modules));
-        assert(!conflicts.length, `[PANIC] name conflicts for effects, mutations and service actions under namespace "${prefix}":\n  ${conflicts}`);
+        var conflicts = lodash_1.intersection(lodash_1.keys(actionsActionKeyMap), lodash_1.keys(mutationEffectActionKeyMap), lodash_1.keys(effectActionKeyMap), lodash_1.keys(modules));
+        assert_1.default(!conflicts.length, "[PANIC] name conflicts for effects, mutations and service actions under namespace \"" + prefix + "\":\n  " + conflicts);
     }
     // Create action creators.
-    const actionCreators = merge(mapValues(merge({}, actionsActionKeyMap, mutationEffectActionKeyMap, effectActionKeyMap), type => {
-        const fn = (payload) => ({
-            type,
-            payload
-        });
+    var actionCreators = lodash_1.merge(lodash_1.mapValues(lodash_1.merge({}, actionsActionKeyMap, mutationEffectActionKeyMap, effectActionKeyMap), function (type) {
+        var fn = function (payload) { return ({
+            type: type,
+            payload: payload
+        }); };
         Object.defineProperty(fn, "toString", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: () => type
+            value: function () { return type; }
         });
         if (process.env.NODE_ENV !== "production") {
             Object.defineProperty(fn, "name", {
                 configurable: true,
                 enumerable: false,
                 writable: false,
-                value: `action:${type}`
+                value: "action:" + type
             });
         }
         return fn;
-    }), mapValues(modules, module => module.actions_));
+    }), lodash_1.mapValues(modules, function (module) { return module.actions_; }));
     // Sucribe.
-    const subs = [];
-    const subscribe = (sub) => {
+    var subs = [];
+    var subscribe = function (sub) {
         subs.push(sub);
     };
     // Configure
-    const configure = (() => {
-        const context = {};
+    var configure = (function () {
+        var context = {};
         // Generate store getters.
-        const storeGetters = mapKeys(mapValues(getterKeyMap, (key, name) => wrapGetter(getters[name], context, key)), (getter_, name) => getterKeyMap[name]);
+        var storeGetters = lodash_1.mapKeys(lodash_1.mapValues(getterKeyMap, function (key, name) {
+            return wrapGetter(getters[name], context, key);
+        }), function (getter_, name) { return getterKeyMap[name]; });
         // Generate store mutations.
-        const storeMutations = mapKeys(mapValues(mutationActionKeyMap, (key, name) => wrapMutation(mutations[name], context, key)), (mutation_, name) => mutationActionKeyMap[name]);
+        var storeMutations = lodash_1.mapKeys(lodash_1.mapValues(mutationActionKeyMap, function (key, name) {
+            return wrapMutation(mutations[name], context, key);
+        }), function (mutation_, name) { return mutationActionKeyMap[name]; });
         // Generate store actions from effects.
-        const storeActions = createEffectsStoreActions(effects, effectActionKeyMap, context);
+        var storeActions = createEffectsStoreActions(effects, effectActionKeyMap, context);
         // Generate store actions from mutation effects.
-        merge(storeActions, createMutationsStoreActions(mutationEffectActionKeyMap, mutationActionKeyMap, context), createActionsStoreActions(actionsActionKeyMap, context));
+        lodash_1.merge(storeActions, createMutationsStoreActions(mutationEffectActionKeyMap, mutationActionKeyMap, context), createActionsStoreActions(actionsActionKeyMap, context));
         // Generate store modules.
-        const moduleConfigs = mapValues(modules, module => module.configure());
-        const storeModules = mapValues(moduleConfigs, ({ store }) => store);
-        const data = options.data;
+        var moduleConfigs = lodash_1.mapValues(modules, function (module) { return module.configure(); });
+        var storeModules = lodash_1.mapValues(moduleConfigs, function (_a) {
+            var store = _a.store;
+            return store;
+        });
+        var data = options.data;
         return {
             // The config for store.
             store: {
@@ -399,54 +481,58 @@ model = (options => {
                 actions: storeActions,
                 modules: storeModules
             },
-            bind({ namespace, store, state, channel, services }) {
+            bind: function (_a) {
+                var namespace = _a.namespace, store = _a.store, state = _a.state, channel = _a.channel, services = _a.services;
                 context.c = channel;
                 // Bind modules.
-                const modelModules = mapValues(moduleConfigs, ({ bind }, key) => bind({
-                    namespace: [...namespace, key],
-                    store,
-                    state: state[key],
-                    channel,
-                    services
-                }));
+                var modelModules = lodash_1.mapValues(moduleConfigs, function (_a, key) {
+                    var bind = _a.bind;
+                    return bind({
+                        namespace: namespace.concat([key]),
+                        store: store,
+                        state: state[key],
+                        channel: channel,
+                        services: services
+                    });
+                });
                 // Create model getters.
-                const modelGetters = reduce(getterKeyMap, (getters, key, name) => {
-                    const descriptor = Object.getOwnPropertyDescriptor(store.getters, key);
+                var modelGetters = lodash_1.reduce(getterKeyMap, function (getters, key, name) {
+                    var descriptor = Object.getOwnPropertyDescriptor(store.getters, key);
                     if (process.env.NODE_ENV !== "production") {
-                        assert(descriptor, `[PANIC] Failed to get property "${key}" from store.`);
+                        assert_1.default(descriptor, "[PANIC] Failed to get property \"" + key + "\" from store.");
                     }
                     Object.defineProperty(getters, name, descriptor);
                     return getters;
-                }, mapValues(modelModules, model => model.getters));
+                }, lodash_1.mapValues(modelModules, function (model) { return model.getters; }));
                 // Create model dispatcher.
-                const dispatch = createModelDispatcher(prefix, store);
+                var dispatch = createModelDispatcher(prefix, store);
                 // Attach mutation effect actions.
-                forOwn(mutationEffectActionKeyMap, (key, name) => {
+                lodash_1.forOwn(mutationEffectActionKeyMap, function (key, name) {
                     dispatch[name] = createActionDispatcher(store, key);
                 });
                 // Attach effect actions.
-                forOwn(effectActionKeyMap, (key, name) => {
+                lodash_1.forOwn(effectActionKeyMap, function (key, name) {
                     dispatch[name] = createActionDispatcher(store, key);
                 });
                 // Attach module actions.
-                forOwn(modelModules, (model, name) => {
+                lodash_1.forOwn(modelModules, function (model, name) {
                     dispatch[name] = model.dispatch;
                 });
                 // Create model sub list, modules' first.
-                const modelSubscription = combineSubscriptions(concat(map(modelModules, model => model.subscribe), map(subs, sub => () => sub(context.m))));
+                var modelSubscription = combineSubscriptions(lodash_1.concat(lodash_1.map(modelModules, function (model) { return model.subscribe; }), lodash_1.map(subs, function (sub) { return function () { return sub(context.m); }; })));
                 // Create model service.
-                const modelService = combineSagas(concat(map(modelModules, model => model.saga), createModelSagas(sagas, effects, effectActionKeyMap)), context);
+                var modelService = combineSagas(lodash_1.concat(lodash_1.map(modelModules, function (model) { return model.saga; }), createModelSagas(sagas, effects, effectActionKeyMap)), context);
                 return (context.m = {
-                    namespace,
-                    services,
+                    namespace: namespace,
+                    services: services,
                     // for sub context.
-                    onStoreCommit(fn) {
+                    onStoreCommit: function (fn) {
                         return store.subscribe(fn);
                     },
-                    onStoreDispatch(fn) {
+                    onStoreDispatch: function (fn) {
                         return store.subscribeAction(fn);
                     },
-                    watch(getter, cb, options) {
+                    watch: function (getter, cb, options) {
                         return store.watch(getter, cb, options);
                     },
                     // model state.
@@ -454,7 +540,7 @@ model = (options => {
                     // model dispatch.
                     dispatch: dispatch,
                     // model data.
-                    data: isFunction(data) ? data() : data || {},
+                    data: lodash_1.isFunction(data) ? data() : data || {},
                     // model actions.
                     actions: actionCreators,
                     // model getters.
@@ -468,14 +554,13 @@ model = (options => {
         };
     });
     // Config object
-    const config = {
+    var config = {
         actions_: actionCreators,
         configure: configure,
-        subscribe(sub) {
+        subscribe: function (sub) {
             subscribe(sub);
             return config;
         }
     };
     return config;
 });
-export { bootstrap, init, hotReload, model };
