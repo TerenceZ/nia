@@ -87,18 +87,6 @@ function createEffectsStoreActions(effects, keyMap, context) {
         return actions;
     }, {});
 }
-function createServicesStoreActions(keyMap, context) {
-    var dispatcher = function (store_, action) {
-        context.c.put(action);
-    };
-    return lodash_1.reduce(keyMap, function (actions, key) {
-        actions[key] =
-            process.env.NODE_ENV !== "production"
-                ? createSagaDispatcher(context, "service/dispatch:" + key)
-                : dispatcher;
-        return actions;
-    }, {});
-}
 function createMutationEffect(name, type, context) {
     var fn = function (store, action) {
         store.commit(type, action.payload);
@@ -193,7 +181,10 @@ function createSagaDispatcher(context, name) {
     return dispatcher;
 }
 function createModelSagas(services, effects, keyMap) {
-    return lodash_1.concat(lodash_1.map(effects, function (effect, name) { return [keyMap[name], effect]; }), lodash_1.map(services, function (service) { return [null, service]; }));
+    return lodash_1.concat(lodash_1.filter(lodash_1.map(effects, function (effect, name) { return [keyMap[name], effect]; }), function (_a) {
+        var name_ = _a[0], effect = _a[1];
+        return isGeneratorFunction(effect);
+    }), lodash_1.map(services, function (service) { return [null, service]; }));
 }
 function wrapForkSaga(saga, context, key) {
     var wrapped = function (action) {

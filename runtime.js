@@ -55,18 +55,6 @@ function createEffectsStoreActions(effects, keyMap, context) {
         return actions;
     }, {});
 }
-function createServicesStoreActions(keyMap, context) {
-    const dispatcher = (store_, action) => {
-        context.c.put(action);
-    };
-    return reduce(keyMap, (actions, key) => {
-        actions[key] =
-            process.env.NODE_ENV !== "production"
-                ? createSagaDispatcher(context, `service/dispatch:${key}`)
-                : dispatcher;
-        return actions;
-    }, {});
-}
 function createMutationEffect(name, type, context) {
     const fn = (store, action) => {
         store.commit(type, action.payload);
@@ -157,7 +145,7 @@ function createSagaDispatcher(context, name) {
     return dispatcher;
 }
 function createModelSagas(services, effects, keyMap) {
-    return concat(map(effects, (effect, name) => [keyMap[name], effect]), map(services, service => [null, service]));
+    return concat(filter(map(effects, (effect, name) => [keyMap[name], effect]), ([name_, effect]) => isGeneratorFunction(effect)), map(services, service => [null, service]));
 }
 function wrapForkSaga(saga, context, key) {
     const wrapped = (action) => fork([context.m, saga], context.m, action.payload);

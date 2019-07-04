@@ -106,27 +106,6 @@ function createEffectsStoreActions(
   );
 }
 
-function createServicesStoreActions(
-  keyMap: Record<string, string>,
-  context: ModelContext
-) {
-  const dispatcher = (store_: Store<any>, action: any) => {
-    context.c.put(action);
-  };
-
-  return reduce(
-    keyMap,
-    (actions, key) => {
-      actions[key] =
-        process.env.NODE_ENV !== "production"
-          ? createSagaDispatcher(context, `service/dispatch:${key}`)
-          : dispatcher;
-      return actions;
-    },
-    {} as Record<string, Function>
-  );
-}
-
 function createMutationEffect(
   name: string,
   type: string,
@@ -256,7 +235,10 @@ function createModelSagas(
   keyMap: Record<string, string>
 ) {
   return concat(
-    map(effects, (effect, name) => [keyMap[name], effect]) as any,
+    filter(
+      map(effects, (effect, name) => [keyMap[name], effect]) as any,
+      ([name_, effect]) => isGeneratorFunction(effect)
+    ),
     map(services, service => [null, service])
   );
 }
