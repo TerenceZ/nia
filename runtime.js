@@ -1,5 +1,5 @@
 import { Store } from "vuex";
-import { merge, map, mapKeys, mapValues, uniqueId, forOwn, isFunction, keys, intersection, forEach, reduce, filter, concat, noop, isArray, reverse, compact, assign, pick } from "lodash";
+import { merge, map, mapKeys, mapValues, uniqueId, forOwn, isFunction, keys, intersection, forEach, reduce, concat, noop, compact, assign, pick, flowRight } from "lodash";
 import { stdChannel, END, runSaga } from "redux-saga";
 import { fork, all, take } from "redux-saga/effects";
 import assert from "assert";
@@ -144,17 +144,18 @@ function createSagaDispatcher(context, name) {
     }
     return dispatcher;
 }
-function createModelSagas(services, effects, keyMap) {
-    return concat(filter(map(effects, (effect, name) => [keyMap[name], effect]), ([name_, effect]) => isGeneratorFunction(effect)), map(services, service => [null, service]));
-}
-function wrapForkSaga(saga, context, key) {
-    const wrapped = (action) => fork([context.m, saga], context.m, action.payload);
-    if (process.env.NODE_ENV !== "production" && (key || saga.name)) {
+function createActionWatcherSaga(saga, type) {
+    const wrapped = function* (ctx) {
+        while (true) {
+            yield fork([ctx.m, saga], ctx.m, (yield take(type)).payload);
+        }
+    };
+    if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(wrapped, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: `saga/fork:${key || saga.name}`
+            value: `saga/fork:${type}`
         });
     }
     return wrapped;
@@ -162,61 +163,36 @@ function wrapForkSaga(saga, context, key) {
 function* noeff() {
     // do nothing.
 }
-function combineSubscriptions(subs) {
-    subs = filter(subs, sub => sub !== noop);
+function combineSubs(subs) {
     if (!subs.length) {
         return noop;
     }
-    if (subs.length === 1) {
-        return subs[0];
-    }
-    return () => {
-        const unsubs = reverse(compact(map(subs, sub => sub())));
-        return unsubs.length
-            ? () => {
-                forEach(unsubs, unsub => unsub());
-            }
-            : noop;
-    };
+    return () => flowRight(compact(map(subs, ({ sub, ctx }) => sub.call(ctx))));
 }
-function combineSagas(sagas, context) {
-    sagas = filter(map(sagas, effect => {
-        let fn;
-        if (isArray(effect)) {
-            const [type, eff] = effect;
-            const fork = wrapForkSaga(eff, context, type);
-            fn =
-                type != null
-                    ? function* () {
-                        while (true) {
-                            yield fork(yield take(type));
-                        }
-                    }
-                    : function* () {
-                        yield fork({});
-                    };
-            if (process.env.NODE_ENV !== "production") {
-                Object.defineProperty(fn, "name", {
-                    configurable: true,
-                    enumerable: false,
-                    writable: false,
-                    value: `saga/daemon:${type || eff.name || uniqueId("service")}`
-                });
-            }
-        }
-        else {
-            fn = effect;
-        }
-        return fn;
-    }), saga => saga !== noeff);
+function combineSagas(sagas) {
     if (!sagas.length) {
         return noeff;
     }
-    if (sagas.length === 1) {
-        return sagas[0];
-    }
-    return function* saga() {
-        yield all(map(sagas, saga => saga()));
+    const tasks = map(sagas, ({ saga, ctx, action }) => {
+        if (action) {
+            saga = createActionWatcherSaga(saga, action);
+        }
+        else if (process.env.NODE_ENV !== "production") {
+            let fn = saga;
+            saga = function* (sagaCtx) {
+                yield fork([sagaCtx.m, fn], sagaCtx.m);
+            };
+            Object.defineProperty(saga, "name", {
+                configurable: true,
+                enumerable: false,
+                writable: false,
+                value: `saga/daemon:${saga.name || uniqueId("saga")}`
+            });
+        }
+        return { saga, ctx };
+    });
+    return function* rootSaga() {
+        yield all(map(tasks, task => task.saga.call(task.ctx.m, task.ctx.m)));
     };
 }
 // API declaration
@@ -245,11 +221,11 @@ bootstrap = (factory, options = {}) => {
         store.stop();
         stopped = false;
         hotReload(store, nextFactory);
-        runSaga(assign({}, store.io, options.saga), store.service);
-        unsub = store.subscribe();
+        runSaga(assign({}, store.io, options.saga), combineSagas(store.sagas));
+        unsub = combineSubs(store.subs)();
     };
-    runSaga(assign({}, store.io, options.saga), store.saga);
-    unsub = store.subscribe();
+    runSaga(assign({}, store.io, options.saga), combineSagas(store.sagas));
+    unsub = combineSubs(store.subs)();
     return store;
 };
 // API: init()
@@ -285,8 +261,8 @@ hotReload = (model, factory, options = {}) => {
     });
     model.actions = nextModel.actions;
     model.getters = nextModel.getters;
-    model.saga = nextModel.saga;
-    model.subscribe = nextModel.subscribe;
+    model.sagas = nextModel.sagas;
+    model.subs = nextModel.subs;
     model.dispatch = nextModel.dispatch;
     model.io = createIO(model.store, channel);
 };
@@ -357,7 +333,7 @@ model = (options => {
             });
         }
         return fn;
-    }), mapValues(modules, module => module.actions_));
+    }), mapValues(modules, module => module.actions));
     // Sucribe.
     const subs = [];
     const subscribe = (sub) => {
@@ -421,9 +397,34 @@ model = (options => {
                     dispatch[name] = model.dispatch;
                 });
                 // Create model sub list, modules' first.
-                const modelSubscription = combineSubscriptions(concat(map(modelModules, model => model.subscribe), map(subs, sub => () => sub(context.m))));
-                // Create model service.
-                const modelService = combineSagas(concat(map(modelModules, model => model.saga), createModelSagas(sagas, effects, effectActionKeyMap)), context);
+                const modelSubs = modelModules
+                    ? concat([], ...map(modelModules, model => model.subs))
+                    : [];
+                forEach(subs, sub => {
+                    modelSubs.push({
+                        sub,
+                        ctx: context
+                    });
+                });
+                // Create model sagas.
+                const modelSagas = modelModules
+                    ? concat([], ...map(modelModules, model => model.sagas))
+                    : [];
+                forOwn(effects, (effect, name) => {
+                    if (isGeneratorFunction(effect)) {
+                        modelSagas.push({
+                            saga: effect,
+                            ctx: context,
+                            action: effectActionKeyMap[name]
+                        });
+                    }
+                });
+                forEach(sagas, saga => {
+                    modelSagas.push({
+                        saga,
+                        ctx: context
+                    });
+                });
                 return (context.m = {
                     namespace,
                     services,
@@ -447,17 +448,17 @@ model = (options => {
                     actions: actionCreators,
                     // model getters.
                     getters: modelGetters,
-                    // model service.
-                    saga: modelService,
-                    // model subscription.
-                    subscribe: modelSubscription
+                    // model sagas.
+                    sagas: modelSagas,
+                    // model subs.
+                    subs: modelSubs
                 });
             }
         };
     });
     // Config object
     const config = {
-        actions_: actionCreators,
+        actions: actionCreators,
         configure: configure,
         subscribe(sub) {
             subscribe(sub);

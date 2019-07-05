@@ -26,6 +26,17 @@ export type SubscriptionContext<
   watch: Store<S>["watch"];
 };
 
+export interface ModelSaga {
+  saga: Saga;
+  ctx: any;
+  action?: string;
+}
+
+export interface ModelSub {
+  sub: Function;
+  ctx: any;
+}
+
 export interface Model<State = any, Getters = any, ActionCreators = any> {
   namespace: string[];
   state: State;
@@ -33,9 +44,8 @@ export interface Model<State = any, Getters = any, ActionCreators = any> {
   actions: ActionCreators;
   dispatch: ActionDispatcher<ActionCreators>;
   services: Services;
-
-  saga: Saga;
-  subscribe: () => () => void;
+  sagas: ModelSaga[];
+  subs: ModelSub[];
 }
 
 export interface ModelBindOptions<S = any, A = any> {
@@ -46,11 +56,7 @@ export interface ModelBindOptions<S = any, A = any> {
   channel: MulticastChannel<A>;
 }
 
-export interface ModelFactory<
-  M extends Model = Model,
-  D = any,
-  S = M["state"]
-> {
+export interface ModelFactory<M extends Model = Model, D = any> {
   configure(): {
     store: StoreOptions<any>;
     bind(options: ModelBindOptions): M;
@@ -58,9 +64,7 @@ export interface ModelFactory<
   subscribe(
     sub: (context: SubscriptionContext<M, D>) => void | (() => void)
   ): this;
-
-  /** @internal */
-  actions_: Record<string, Function>;
+  actions: Model["actions"];
 }
 
 export type ModelBindContext<S> = Pick<

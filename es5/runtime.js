@@ -180,22 +180,30 @@ function createSagaDispatcher(context, name) {
     }
     return dispatcher;
 }
-function createModelSagas(services, effects, keyMap) {
-    return lodash_1.concat(lodash_1.filter(lodash_1.map(effects, function (effect, name) { return [keyMap[name], effect]; }), function (_a) {
-        var name_ = _a[0], effect = _a[1];
-        return isGeneratorFunction(effect);
-    }), lodash_1.map(services, function (service) { return [null, service]; }));
-}
-function wrapForkSaga(saga, context, key) {
-    var wrapped = function (action) {
-        return effects_1.fork([context.m, saga], context.m, action.payload);
+function createActionWatcherSaga(saga, type) {
+    var wrapped = function (ctx) {
+        var _a, _b;
+        return __generator(this, function (_c) {
+            switch (_c.label) {
+                case 0:
+                    if (!true) return [3 /*break*/, 3];
+                    _a = effects_1.fork;
+                    _b = [[ctx.m, saga], ctx.m];
+                    return [4 /*yield*/, effects_1.take(type)];
+                case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_c.sent()).payload]))];
+                case 2:
+                    _c.sent();
+                    return [3 /*break*/, 0];
+                case 3: return [2 /*return*/];
+            }
+        });
     };
-    if (process.env.NODE_ENV !== "production" && (key || saga.name)) {
+    if (process.env.NODE_ENV !== "production") {
         Object.defineProperty(wrapped, "name", {
             configurable: true,
             enumerable: false,
             writable: false,
-            value: "saga/fork:" + (key || saga.name)
+            value: "saga/fork:" + type
         });
     }
     return wrapped;
@@ -205,81 +213,49 @@ function noeff() {
         return [2 /*return*/];
     });
 }
-function combineSubscriptions(subs) {
-    subs = lodash_1.filter(subs, function (sub) { return sub !== lodash_1.noop; });
+function combineSubs(subs) {
     if (!subs.length) {
         return lodash_1.noop;
     }
-    if (subs.length === 1) {
-        return subs[0];
-    }
-    return function () {
-        var unsubs = lodash_1.reverse(lodash_1.compact(lodash_1.map(subs, function (sub) { return sub(); })));
-        return unsubs.length
-            ? function () {
-                lodash_1.forEach(unsubs, function (unsub) { return unsub(); });
-            }
-            : lodash_1.noop;
-    };
+    return function () { return lodash_1.flowRight(lodash_1.compact(lodash_1.map(subs, function (_a) {
+        var sub = _a.sub, ctx = _a.ctx;
+        return sub.call(ctx);
+    }))); };
 }
-function combineSagas(sagas, context) {
-    sagas = lodash_1.filter(lodash_1.map(sagas, function (effect) {
-        var fn;
-        if (lodash_1.isArray(effect)) {
-            var type_1 = effect[0], eff = effect[1];
-            var fork_1 = wrapForkSaga(eff, context, type_1);
-            fn =
-                type_1 != null
-                    ? function () {
-                        var _a;
-                        return __generator(this, function (_b) {
-                            switch (_b.label) {
-                                case 0:
-                                    if (!true) return [3 /*break*/, 3];
-                                    _a = fork_1;
-                                    return [4 /*yield*/, effects_1.take(type_1)];
-                                case 1: return [4 /*yield*/, _a.apply(void 0, [_b.sent()])];
-                                case 2:
-                                    _b.sent();
-                                    return [3 /*break*/, 0];
-                                case 3: return [2 /*return*/];
-                            }
-                        });
-                    }
-                    : function () {
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0: return [4 /*yield*/, fork_1({})];
-                                case 1:
-                                    _a.sent();
-                                    return [2 /*return*/];
-                            }
-                        });
-                    };
-            if (process.env.NODE_ENV !== "production") {
-                Object.defineProperty(fn, "name", {
-                    configurable: true,
-                    enumerable: false,
-                    writable: false,
-                    value: "saga/daemon:" + (type_1 || eff.name || lodash_1.uniqueId("service"))
-                });
-            }
-        }
-        else {
-            fn = effect;
-        }
-        return fn;
-    }), function (saga) { return saga !== noeff; });
+function combineSagas(sagas) {
     if (!sagas.length) {
         return noeff;
     }
-    if (sagas.length === 1) {
-        return sagas[0];
-    }
-    return function saga() {
+    var tasks = lodash_1.map(sagas, function (_a) {
+        var saga = _a.saga, ctx = _a.ctx, action = _a.action;
+        if (action) {
+            saga = createActionWatcherSaga(saga, action);
+        }
+        else if (process.env.NODE_ENV !== "production") {
+            var fn_1 = saga;
+            saga = function (sagaCtx) {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0: return [4 /*yield*/, effects_1.fork([sagaCtx.m, fn_1], sagaCtx.m)];
+                        case 1:
+                            _a.sent();
+                            return [2 /*return*/];
+                    }
+                });
+            };
+            Object.defineProperty(saga, "name", {
+                configurable: true,
+                enumerable: false,
+                writable: false,
+                value: "saga/daemon:" + (saga.name || lodash_1.uniqueId("saga"))
+            });
+        }
+        return { saga: saga, ctx: ctx };
+    });
+    return function rootSaga() {
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, effects_1.all(lodash_1.map(sagas, function (saga) { return saga(); }))];
+                case 0: return [4 /*yield*/, effects_1.all(lodash_1.map(tasks, function (task) { return task.saga.call(task.ctx.m, task.ctx.m); }))];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -318,11 +294,11 @@ exports.bootstrap = bootstrap = function (factory, options) {
         store.stop();
         stopped = false;
         hotReload(store, nextFactory);
-        redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), store.service);
-        unsub = store.subscribe();
+        redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), combineSagas(store.sagas));
+        unsub = combineSubs(store.subs)();
     };
-    redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), store.saga);
-    unsub = store.subscribe();
+    redux_saga_1.runSaga(lodash_1.assign({}, store.io, options.saga), combineSagas(store.sagas));
+    unsub = combineSubs(store.subs)();
     return store;
 };
 // API: init()
@@ -360,8 +336,8 @@ exports.hotReload = hotReload = function (model, factory, options) {
     });
     model.actions = nextModel.actions;
     model.getters = nextModel.getters;
-    model.saga = nextModel.saga;
-    model.subscribe = nextModel.subscribe;
+    model.sagas = nextModel.sagas;
+    model.subs = nextModel.subs;
     model.dispatch = nextModel.dispatch;
     model.io = createIO(model.store, channel);
 };
@@ -438,7 +414,7 @@ exports.model = model = (function (options) {
             });
         }
         return fn;
-    }), lodash_1.mapValues(modules, function (module) { return module.actions_; }));
+    }), lodash_1.mapValues(modules, function (module) { return module.actions; }));
     // Sucribe.
     var subs = [];
     var subscribe = function (sub) {
@@ -513,9 +489,32 @@ exports.model = model = (function (options) {
                     dispatch[name] = model.dispatch;
                 });
                 // Create model sub list, modules' first.
-                var modelSubscription = combineSubscriptions(lodash_1.concat(lodash_1.map(modelModules, function (model) { return model.subscribe; }), lodash_1.map(subs, function (sub) { return function () { return sub(context.m); }; })));
-                // Create model service.
-                var modelService = combineSagas(lodash_1.concat(lodash_1.map(modelModules, function (model) { return model.saga; }), createModelSagas(sagas, effects, effectActionKeyMap)), context);
+                var modelSubs = modelModules
+                    ? lodash_1.concat.apply(void 0, [[]].concat(lodash_1.map(modelModules, function (model) { return model.subs; }))) : [];
+                lodash_1.forEach(subs, function (sub) {
+                    modelSubs.push({
+                        sub: sub,
+                        ctx: context
+                    });
+                });
+                // Create model sagas.
+                var modelSagas = modelModules
+                    ? lodash_1.concat.apply(void 0, [[]].concat(lodash_1.map(modelModules, function (model) { return model.sagas; }))) : [];
+                lodash_1.forOwn(effects, function (effect, name) {
+                    if (isGeneratorFunction(effect)) {
+                        modelSagas.push({
+                            saga: effect,
+                            ctx: context,
+                            action: effectActionKeyMap[name]
+                        });
+                    }
+                });
+                lodash_1.forEach(sagas, function (saga) {
+                    modelSagas.push({
+                        saga: saga,
+                        ctx: context
+                    });
+                });
                 return (context.m = {
                     namespace: namespace,
                     services: services,
@@ -539,17 +538,17 @@ exports.model = model = (function (options) {
                     actions: actionCreators,
                     // model getters.
                     getters: modelGetters,
-                    // model service.
-                    saga: modelService,
-                    // model subscription.
-                    subscribe: modelSubscription
+                    // model sagas.
+                    sagas: modelSagas,
+                    // model subs.
+                    subs: modelSubs
                 });
             }
         };
     });
     // Config object
     var config = {
-        actions_: actionCreators,
+        actions: actionCreators,
         configure: configure,
         subscribe: function (sub) {
             subscribe(sub);

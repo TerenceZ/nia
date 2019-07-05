@@ -20,16 +20,16 @@ export interface BootstrapOptions
 }
 
 export type EnhancedRootModel<M extends Model> = RootModel<M> & {
-  hotReload(factory: ModelFactory<M>): void;
+  hotReload: (factory: ModelFactory<M>) => void;
 };
 
-export declare function bootstrap<M extends Model, D, S>(
-  factory: ModelFactory<M, D, S>,
+export declare function bootstrap<M extends Model, D>(
+  factory: ModelFactory<M, D>,
   options?: BootstrapOptions
 ): EnhancedRootModel<M>;
 
 export declare function init<M extends Model, D, S>(
-  factory: ModelFactory<M, D, S>,
+  factory: ModelFactory<M, D>,
   options?: StoreExtraOptions<S> & ServicesOptions
 ): RootModel<M>;
 
