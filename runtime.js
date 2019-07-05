@@ -145,9 +145,9 @@ function createSagaDispatcher(context, name) {
     return dispatcher;
 }
 function createActionWatcherSaga(saga, type) {
-    const wrapped = function* (ctx) {
+    const wrapped = function* (model) {
         while (true) {
-            yield fork([ctx.m, saga], ctx.m, (yield take(type)).payload);
+            yield fork([model, saga], model, (yield take(type)).payload);
         }
     };
     if (process.env.NODE_ENV !== "production") {
@@ -167,7 +167,7 @@ function combineSubs(subs) {
     if (!subs.length) {
         return noop;
     }
-    return () => flowRight(compact(map(subs, ({ sub, ctx }) => sub.call(ctx))));
+    return () => flowRight(compact(map(subs, sub => sub.sub.call(sub.ctx.m, sub.ctx.m))));
 }
 function combineSagas(sagas) {
     if (!sagas.length) {
@@ -179,8 +179,8 @@ function combineSagas(sagas) {
         }
         else if (process.env.NODE_ENV !== "production") {
             let fn = saga;
-            saga = function* (sagaCtx) {
-                yield fork([sagaCtx.m, fn], sagaCtx.m);
+            saga = function* (model) {
+                yield fork([model, fn], model);
             };
             Object.defineProperty(saga, "name", {
                 configurable: true,

@@ -181,14 +181,14 @@ function createSagaDispatcher(context, name) {
     return dispatcher;
 }
 function createActionWatcherSaga(saga, type) {
-    var wrapped = function (ctx) {
+    var wrapped = function (model) {
         var _a, _b;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
                     if (!true) return [3 /*break*/, 3];
                     _a = effects_1.fork;
-                    _b = [[ctx.m, saga], ctx.m];
+                    _b = [[model, saga], model];
                     return [4 /*yield*/, effects_1.take(type)];
                 case 1: return [4 /*yield*/, _a.apply(void 0, _b.concat([(_c.sent()).payload]))];
                 case 2:
@@ -217,10 +217,9 @@ function combineSubs(subs) {
     if (!subs.length) {
         return lodash_1.noop;
     }
-    return function () { return lodash_1.flowRight(lodash_1.compact(lodash_1.map(subs, function (_a) {
-        var sub = _a.sub, ctx = _a.ctx;
-        return sub.call(ctx);
-    }))); };
+    return function () {
+        return lodash_1.flowRight(lodash_1.compact(lodash_1.map(subs, function (sub) { return sub.sub.call(sub.ctx.m, sub.ctx.m); })));
+    };
 }
 function combineSagas(sagas) {
     if (!sagas.length) {
@@ -233,10 +232,10 @@ function combineSagas(sagas) {
         }
         else if (process.env.NODE_ENV !== "production") {
             var fn_1 = saga;
-            saga = function (sagaCtx) {
+            saga = function (model) {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [4 /*yield*/, effects_1.fork([sagaCtx.m, fn_1], sagaCtx.m)];
+                        case 0: return [4 /*yield*/, effects_1.fork([model, fn_1], model)];
                         case 1:
                             _a.sent();
                             return [2 /*return*/];
