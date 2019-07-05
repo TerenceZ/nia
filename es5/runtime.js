@@ -108,7 +108,7 @@ function createMutationsStoreActions(effectKeyMap, mutationKeyMap, context) {
     }), function (fn_, name) { return effectKeyMap[name]; });
 }
 function createActionEffect(name, type, context) {
-    var fn = function (store, action) {
+    var fn = function (store_, action) {
         context.c.put(action);
     };
     if (process.env.NODE_ENV !== "production") {
@@ -122,7 +122,14 @@ function createActionEffect(name, type, context) {
     return fn;
 }
 function createActionsStoreActions(keyMap, context) {
-    return lodash_1.mapKeys(lodash_1.mapValues(keyMap, function (key, name) { return createActionEffect(name, key, context); }), function (fn_, name) { return keyMap[name]; });
+    var dispatcher = function (s_, a) {
+        context.c.put(a);
+    };
+    return lodash_1.mapKeys(lodash_1.mapValues(keyMap, function (key, name) {
+        return process.env.NODE_ENV !== "production"
+            ? createActionEffect(name, key, context)
+            : dispatcher;
+    }), function (fn_, name) { return keyMap[name]; });
 }
 function wrapGetter(fn, context, name) {
     var wrapped = function () { return fn.call(context.m, context.m); };
@@ -481,6 +488,10 @@ exports.model = model = (function (options) {
                 });
                 // Attach effect actions.
                 lodash_1.forOwn(effectActionKeyMap, function (key, name) {
+                    dispatch[name] = createActionDispatcher(store, key);
+                });
+                // Attach action actions.
+                lodash_1.forOwn(actionsActionKeyMap, function (key, name) {
                     dispatch[name] = createActionDispatcher(store, key);
                 });
                 // Attach module actions.

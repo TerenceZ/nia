@@ -145,7 +145,7 @@ function createMutationsStoreActions(
 }
 
 function createActionEffect(name: string, type: string, context: ModelContext) {
-  const fn = (store: Store<any>, action: any) => {
+  const fn = (store_: Store<any>, action: any) => {
     context.c.put(action);
   };
 
@@ -164,8 +164,16 @@ function createActionsStoreActions(
   keyMap: Record<string, string>,
   context: ModelContext
 ) {
+  const dispatcher = (s_: Store<any>, a: any) => {
+    context.c.put(a);
+  };
+
   return mapKeys(
-    mapValues(keyMap, (key, name) => createActionEffect(name, key, context)),
+    mapValues(keyMap, (key, name) =>
+      process.env.NODE_ENV !== "production"
+        ? createActionEffect(name, key, context)
+        : dispatcher
+    ),
     (fn_, name) => keyMap[name]
   );
 }
@@ -600,6 +608,11 @@ model = <typeof modelApi>(options => {
 
         // Attach effect actions.
         forOwn(effectActionKeyMap, (key, name) => {
+          (dispatch as any)[name] = createActionDispatcher(store, key);
+        });
+
+        // Attach action actions.
+        forOwn(actionsActionKeyMap, (key, name) => {
           (dispatch as any)[name] = createActionDispatcher(store, key);
         });
 

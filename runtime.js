@@ -74,7 +74,7 @@ function createMutationsStoreActions(effectKeyMap, mutationKeyMap, context) {
     return mapKeys(mapValues(mutationKeyMap, (mutationKey, name) => createMutationEffect(name, mutationKey, context)), (fn_, name) => effectKeyMap[name]);
 }
 function createActionEffect(name, type, context) {
-    const fn = (store, action) => {
+    const fn = (store_, action) => {
         context.c.put(action);
     };
     if (process.env.NODE_ENV !== "production") {
@@ -88,7 +88,12 @@ function createActionEffect(name, type, context) {
     return fn;
 }
 function createActionsStoreActions(keyMap, context) {
-    return mapKeys(mapValues(keyMap, (key, name) => createActionEffect(name, key, context)), (fn_, name) => keyMap[name]);
+    const dispatcher = (s_, a) => {
+        context.c.put(a);
+    };
+    return mapKeys(mapValues(keyMap, (key, name) => process.env.NODE_ENV !== "production"
+        ? createActionEffect(name, key, context)
+        : dispatcher), (fn_, name) => keyMap[name]);
 }
 function wrapGetter(fn, context, name) {
     const wrapped = () => fn.call(context.m, context.m);
@@ -390,6 +395,10 @@ model = (options => {
                 });
                 // Attach effect actions.
                 forOwn(effectActionKeyMap, (key, name) => {
+                    dispatch[name] = createActionDispatcher(store, key);
+                });
+                // Attach action actions.
+                forOwn(actionsActionKeyMap, (key, name) => {
                     dispatch[name] = createActionDispatcher(store, key);
                 });
                 // Attach module actions.
