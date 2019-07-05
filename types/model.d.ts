@@ -9,21 +9,20 @@ export interface RootModelIO {
   dispatch<T extends string, P = any, R = any>(action: Action<T, P>): R;
 }
 
-export type RootModel<M extends Model = Model> = M & {
-  store: Store<M["state"]>;
+export type RootModel<M extends Model = Model, S = M["state"]> = M & {
+  store: Store<S>;
   io: RootModelIO;
   stop(): void;
 };
 
-export type SubscriptionContext<
-  M extends Model,
-  Data,
-  S = Model["state"]
-> = Omit<M, "subscribe" | "saga"> & {
+export type SubscriptionContext<M extends Model, Data> = Omit<
+  M,
+  "subscribe" | "saga"
+> & {
   data: Data;
-  onStoreCommit: Store<S>["subscribe"];
-  onStoreDispatch: Store<S>["subscribeAction"];
-  watch: Store<S>["watch"];
+  onStoreCommit: Store<any>["subscribe"];
+  onStoreDispatch: Store<any>["subscribeAction"];
+  watch: Store<any>["watch"];
 };
 
 export interface ModelSaga {
@@ -56,7 +55,11 @@ export interface ModelBindOptions<S = any, A = any> {
   channel: MulticastChannel<A>;
 }
 
-export interface ModelFactory<M extends Model = Model, D = any> {
+export interface ModelFactory<
+  M extends Model = Model,
+  D = any,
+  A = M["actions"]
+> {
   configure(): {
     store: StoreOptions<any>;
     bind(options: ModelBindOptions): M;
@@ -64,7 +67,7 @@ export interface ModelFactory<M extends Model = Model, D = any> {
   subscribe(
     sub: (context: SubscriptionContext<M, D>) => void | (() => void)
   ): this;
-  actions: Model["actions"];
+  actions: A;
 }
 
 export type ModelBindContext<S> = Pick<
