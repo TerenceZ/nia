@@ -100,6 +100,8 @@ function transform({ references, babel: { types: t }, state }) {
         }
 
         function transformFunc(func) {
+          let thisCount = 0;
+          const thisPaths = [];
           const members = {};
           func.traverse({
             ThisExpression(thisPath) {
@@ -111,53 +113,48 @@ function transform({ references, babel: { types: t }, state }) {
                 thisScope = thisScope.parent;
               }
 
-              if (
-                thisScope === func.scope &&
-                thisPath.parentPath.isMemberExpression()
-              ) {
-                const prop = thisPath.parentPath.get("property");
-                if (prop.node.computed) {
-                  return;
-                }
+              if (thisScope === func.scope) {
+                ++thisCount;
+                if (thisPath.parentPath.isMemberExpression()) {
+                  const prop = thisPath.parentPath.get("property");
+                  if (prop.node.computed) {
+                    return;
+                  }
 
-                const name = prop.node.name;
-                (members[name] || (members[name] = [])).push(thisPath);
+                  const name = prop.node.name;
+                  (members[name] || (members[name] = [])).push(thisPath);
+                } else {
+                  thisPaths.push(thisPath);
+                }
               }
             }
           });
 
-          if (Object.keys(members).length) {
+          if (thisCount) {
             const model = func.scope.generateUidIdentifier("model");
             func.node.params.unshift(model);
 
-            if (Object.keys(members).some(key => members[key].length > 1)) {
-              const destructMapper = Object.keys(members).reduce((map, key) => {
-                map[key] = func.scope.generateUidIdentifier(key);
-                members[key].forEach(path =>
-                  path.parentPath.replaceWith(map[key])
+            const memberKeys = Object.keys(members);
+            memberKeys
+              .filter(key => members[key].length === 1)
+              .map(key => members[key][0])
+              .concat(thisPaths)
+              .forEach(thisPath => thisPath.replaceWith(model));
+
+            memberKeys
+              .filter(key => members[key].length > 1)
+              .forEach(key => {
+                const prop = func.scope.generateUidIdentifier(key);
+                func.node.body.body.unshift(
+                  t.variableDeclaration("const", [
+                    t.variableDeclarator(
+                      prop,
+                      t.memberExpression(model, t.identifier(key))
+                    )
+                  ])
                 );
-                return map;
-              }, {});
-              func.node.body.body.unshift(
-                t.variableDeclaration("const", [
-                  t.variableDeclarator(
-                    t.objectPattern(
-                      Object.keys(members).map(name =>
-                        t.objectProperty(
-                          t.identifier(name),
-                          destructMapper[name]
-                        )
-                      )
-                    ),
-                    model
-                  )
-                ])
-              );
-            } else {
-              Object.keys(members).forEach(key =>
-                members[key].forEach(path => path.replaceWith(model))
-              );
-            }
+                members[key].forEach(path => path.parentPath.replaceWith(prop));
+              });
           }
         }
 
