@@ -198,17 +198,19 @@ export type ActionCreatorsForModules<Modules> = {
 
 // Dispatcher
 export type ActionDispatcher<A> = UnionToIntersection<
-  {
-    [K in keyof A]: A[K] extends ActionCreator<
-      infer Type,
-      infer Args,
-      infer Result
-    >
-      ? (action: Action<Type, PayloadForArgs<Args>>) => Result
-      : ActionDispatcher<A[K]>
-  }[keyof A]
+  ActionDispatcherMap<A>[keyof A]
 > &
   ActionDispatcherTree<A>;
+
+export type ActionDispatcherMap<A> = {
+  [K in keyof A]: A[K] extends ActionCreator<
+    infer Type,
+    infer Args,
+    infer Result
+  >
+    ? (action: Action<Type, PayloadForArgs<Args>>) => Result
+    : ActionDispatcherMap<A[K]>[keyof A[K]]
+};
 
 export type ActionDispatcherTree<A> = {
   [K in keyof A]: A[K] extends ActionCreator<
