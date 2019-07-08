@@ -17,7 +17,7 @@ export type RootModel<M extends Model = Model, S = M["state"]> = M & {
 
 export type SubscriptionContext<M extends Model, Data> = Omit<
   M,
-  "subscribe" | "saga"
+  "subs" | "sagas"
 > & {
   data: Data;
   onStoreCommit: Store<any>["subscribe"];
@@ -69,6 +69,12 @@ export interface ModelFactory<
   ): this;
   actions: A;
 }
+
+export type Context<
+  F extends ModelFactory,
+  M = F extends ModelFactory<infer M> ? M : never,
+  D = F extends ModelFactory<any, infer D> ? D : never
+> = Omit<M, "sagas" | "subs" | "namespace"> & { data: D };
 
 export type ModelBindContext<S> = Pick<
   Store<S>,
