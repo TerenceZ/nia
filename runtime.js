@@ -296,8 +296,7 @@ model = (options => {
     const effects = options.effects;
     const effectActionKeyMap = mapValues(effects, nameCreator(process.env.NODE_ENV !== "production" ? "action/effect:" : ""));
     // Resolve sagas.
-    const sagas = [];
-    forOwn(options.sagas, (fn) => {
+    const sagas = map(options.sagas, (fn) => {
         let wrapper = fn;
         if (process.env.NODE_ENV !== "production") {
             wrapper = function (...args) {
@@ -310,7 +309,7 @@ model = (options => {
                 value: nameCreator()(null, fn.name || uniqueId("service"))
             });
         }
-        sagas.push(wrapper);
+        return wrapper;
     });
     // Check if actions conflict.
     if (process.env.NODE_ENV !== "production") {

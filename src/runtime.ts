@@ -437,9 +437,7 @@ model = <typeof modelApi>(options => {
   );
 
   // Resolve sagas.
-  const sagas = [] as Saga[];
-
-  forOwn(options.sagas, (fn: Saga) => {
+  const sagas = map(options.sagas as any, (fn: Saga) => {
     let wrapper = fn;
     if (process.env.NODE_ENV !== "production") {
       wrapper = function(this: any, ...args: any[]) {
@@ -452,7 +450,7 @@ model = <typeof modelApi>(options => {
         value: nameCreator()(null, fn.name || uniqueId("service"))
       });
     }
-    sagas.push(wrapper);
+    return wrapper;
   });
 
   // Check if actions conflict.

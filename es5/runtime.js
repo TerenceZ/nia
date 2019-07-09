@@ -374,8 +374,7 @@ exports.model = model = (function (options) {
     var effects = options.effects;
     var effectActionKeyMap = lodash_1.mapValues(effects, nameCreator(process.env.NODE_ENV !== "production" ? "action/effect:" : ""));
     // Resolve sagas.
-    var sagas = [];
-    lodash_1.forOwn(options.sagas, function (fn) {
+    var sagas = lodash_1.map(options.sagas, function (fn) {
         var wrapper = fn;
         if (process.env.NODE_ENV !== "production") {
             wrapper = function () {
@@ -392,7 +391,7 @@ exports.model = model = (function (options) {
                 value: nameCreator()(null, fn.name || lodash_1.uniqueId("service"))
             });
         }
-        sagas.push(wrapper);
+        return wrapper;
     });
     // Check if actions conflict.
     if (process.env.NODE_ENV !== "production") {
