@@ -9,8 +9,8 @@
     "baseUrl": ".",
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
     "declaration": true,
-    "declarationDir": ".",
-    "outDir": "."
+    "declarationDir": "./types",
+    "outDir": "./lib"
   },
   "include": ["src", "types"],
   "exclude": ["node_modules"]

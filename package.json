@@ -1,10 +1,14 @@
 {
   "name": "vuex-nia",
-  "version": "0.0.19",
+  "version": "1.0.0",
+  "main": "es5/index.js",
+  "module": "lib/index.js",
+  "esnext": "lib/index.js",
+  "types": "types/index.d.ts",
   "description": "A state manager based on vuex and redux-saga.",
   "scripts": {
-    "build:modern": "babel src/macro.js -o es5/macro.js && tsc --build tsconfig.es5.json",
-    "build:es5": "babel src/macro.js -o macro.js && tsc --build tsconfig.json",
+    "build:es5": "tsc --build tsconfig.es5.json",
+    "build:modern": "tsc --build tsconfig.json",
     "build": "npm run build:modern && npm run build:es5"
   },
   "repository": {
@@ -19,9 +23,6 @@
   "author": "TerenceZ",
   "license": "MIT",
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
     "@types/lodash": "^4.14.135",
     "@types/node": "^12.0.12",
     "typescript": "^3.5.2",
@@ -29,13 +30,11 @@
     "vuex": "^3.1.1"
   },
   "peerDependencies": {
-    "babel-plugin-macros": "^2.6.1",
     "vue": "^2.6.10",
     "vuex": "^3.1.1"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
-    "redux-saga": "^1.0.5",
-    "vue-tsx.macro": "^0.3.5"
+    "lodash": "^4.17.14",
+    "redux-saga": "^1.0.5"
   }
 }

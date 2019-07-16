@@ -9,8 +9,6 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
-    "declaration": true,
-    "declarationDir": "es5",
     "outDir": "es5"
   },
   "include": ["src", "types"],
