@@ -37,6 +37,8 @@ export function wrap(value: any): any {
       }
     }
   }
+
+  Object.seal(result)
   return result
 }
 
@@ -60,5 +62,7 @@ export function unwrap(value: any) {
       Reflect.defineProperty(result, prop, descriptor)
     }
   }
+
+  Object.seal(result)
   return result
 }

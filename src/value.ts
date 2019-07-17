@@ -32,12 +32,9 @@ export function value<T>(initial?: any): any {
     return initial
   }
 
-  const value = defineTagProperty(
-    Vue.observable({
-      value: initial,
-    }),
-    VALUE_TAG,
-  )
+  const value = {} as ValueWrapper<T>
+  defineTagProperty(value, VALUE_TAG)
+  ;(Vue as any).util.defineReactive(value, 'value', initial)
 
   if (process.env.NODE_ENV !== 'production') {
     const descriptor = Reflect.getOwnPropertyDescriptor(value, 'value')!
@@ -60,6 +57,7 @@ export function value<T>(initial?: any): any {
     }
   }
 
+  Object.seal(value)
   return value
 }
 

@@ -27,6 +27,7 @@ function wrap(value) {
             }
         }
     }
+    Object.seal(result);
     return result;
 }
 exports.wrap = wrap;
@@ -46,6 +47,7 @@ function unwrap(value) {
             Reflect.defineProperty(result, prop, descriptor);
         }
     }
+    Object.seal(result);
     return result;
 }
 exports.unwrap = unwrap;

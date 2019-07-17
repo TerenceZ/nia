@@ -19,9 +19,9 @@ function value(initial) {
     if (initial && initial[exports.VALUE_TAG]) {
         return initial;
     }
-    var value = utils_1.defineTagProperty(vue_1.default.observable({
-        value: initial,
-    }), exports.VALUE_TAG);
+    var value = {};
+    utils_1.defineTagProperty(value, exports.VALUE_TAG);
+    vue_1.default.util.defineReactive(value, 'value', initial);
     if (process.env.NODE_ENV !== 'production') {
         var descriptor = Reflect.getOwnPropertyDescriptor(value, 'value');
         utils_1.defineTagProperty(descriptor.get, exports.VALUE_GETTER_TAG);
@@ -34,6 +34,7 @@ function value(initial) {
             }, { deep: true, sync: true });
         }
     }
+    Object.seal(value);
     return value;
 }
 exports.value = value;
