@@ -4,7 +4,13 @@ var value_1 = require("./value");
 var utils_1 = require("./utils");
 var context_1 = require("./context");
 var lodash_1 = require("lodash");
+/**
+ * @private
+ */
 var COMPUTED_TAG = Symbol(process.env.NODE_ENV !== 'production' ? 'Computed' : '');
+/**
+ * @private
+ */
 var COMPUTED_GETTER_TAG = Symbol(process.env.NODE_ENV !== 'production' ? 'ComputedGetter' : '');
 var computedWatcherOptions = { lazy: true };
 var computedPropertyOptions = {
@@ -51,6 +57,9 @@ function isComputed(value) {
     return value && value[COMPUTED_TAG];
 }
 exports.isComputed = isComputed;
+/**
+ * @private
+ */
 function isComputedGetter(value) {
     return value && value[COMPUTED_GETTER_TAG];
 }

@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var value_1 = require("./value");
-var util_1 = require("util");
 var context_1 = require("./context");
 var lodash_1 = require("lodash");
 var assert_1 = __importDefault(require("assert"));
@@ -13,7 +12,7 @@ var subscribe_1 = require("./subscribe");
 function watch(target, cb, opts) {
     if (opts === void 0) { opts = {}; }
     var getter;
-    if (util_1.isArray(target)) {
+    if (lodash_1.isArray(target)) {
         getter = createArrayWatchGetter(target);
     }
     else if (value_1.isValue(target)) {

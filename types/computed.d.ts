@@ -14,4 +14,7 @@ export declare function computedMap<T extends Record<string, (() => any) | Compu
     [K in keyof T]: T[K] extends () => infer P ? ValueWrapper<P> : T[K] extends ComputedOptions<infer P> ? ValueWrapper<P> : never;
 };
 export declare function isComputed(value: any): any;
+/**
+ * @private
+ */
 export declare function isComputedGetter(value: any): any;

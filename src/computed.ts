@@ -3,10 +3,16 @@ import { Watcher, Dep, defineTagProperty, noop } from './utils'
 import { getContext } from './context'
 import { mapValues, isFunction } from 'lodash'
 
+/**
+ * @private
+ */
 const COMPUTED_TAG = Symbol(
   process.env.NODE_ENV !== 'production' ? 'Computed' : '',
 )
 
+/**
+ * @private
+ */
 const COMPUTED_GETTER_TAG = Symbol(
   process.env.NODE_ENV !== 'production' ? 'ComputedGetter' : '',
 )
@@ -79,6 +85,9 @@ export function isComputed(value: any) {
   return value && value[COMPUTED_TAG]
 }
 
+/**
+ * @private
+ */
 export function isComputedGetter(value: any) {
   return value && value[COMPUTED_GETTER_TAG]
 }
