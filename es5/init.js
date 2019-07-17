@@ -76,7 +76,7 @@ function init(mod, options) {
         var stopActions_1 = runContextActions(context, options);
         // Inject extra props.
         var vm_1 = context.vm;
-        var store_1 = wrap_1.unwrap(instance);
+        var store_1 = wrap_1.unwrap(instance, false);
         store_1.$store = vstore;
         store_1.$stop = function () {
             store_1.$stop = utils_1.noop;
@@ -84,6 +84,12 @@ function init(mod, options) {
             vm_1.$destroy();
         };
         store_1.$reload = createHotReload(store_1, options);
+        if (process.env.NODE_ENV !== 'production') {
+            Reflect.preventExtensions(store_1);
+        }
+        else {
+            Object.seal(store_1);
+        }
         return store_1;
     }
     finally {

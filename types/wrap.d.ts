@@ -5,7 +5,7 @@ export declare type Wrap<T> = {
 export declare type Unwrap<T> = {
     [K in keyof T]: T[K] extends ValueWrapper<infer V> ? V : T[K];
 };
-export declare function wrap<T extends object>(value: T): {
+export declare function wrap<T extends object>(value: T, seal?: boolean): {
     [K in keyof T]: T[K] extends ValueWrapper<any> ? T[K] : ValueWrapper<T[K]>;
 };
-export declare function unwrap<T extends object>(value: T): Unwrap<T>;
+export declare function unwrap<T extends object>(value: T, seal?: boolean): Unwrap<T>;

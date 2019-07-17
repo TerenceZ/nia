@@ -72,7 +72,7 @@ export function init<T extends object, C extends Context>(
 
     // Inject extra props.
     const vm = context.vm
-    const store = unwrap(instance) as Store<T>
+    const store = unwrap(instance, false) as Store<T>
     store.$store = vstore
 
     store.$stop = () => {
@@ -82,7 +82,11 @@ export function init<T extends object, C extends Context>(
     }
 
     store.$reload = createHotReload(store, options)
-
+    if (process.env.NODE_ENV !== 'production') {
+      Reflect.preventExtensions(store)
+    } else {
+      Object.seal(store)
+    }
     return store
   } finally {
     setContext(null!)

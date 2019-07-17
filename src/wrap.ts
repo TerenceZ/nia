@@ -13,11 +13,12 @@ export type Unwrap<T> = {
 
 export function wrap<T extends object>(
   value: T,
+  seal?: boolean,
 ): {
   [K in keyof T]: T[K] extends ValueWrapper<any> ? T[K] : ValueWrapper<T[K]>
 }
 
-export function wrap(value: any): any {
+export function wrap(value: any, seal = true): any {
   if (process.env.NODE_ENV !== 'production') {
     assert(value, `[PANIC] Falsy value cannot be wrapped.`)
     assert(!isValue(value), `[PANIC] Value wrapper cannot be wrapped.`)
@@ -38,12 +39,14 @@ export function wrap(value: any): any {
     }
   }
 
-  Object.seal(result)
+  if (seal) {
+    Object.seal(result)
+  }
   return result
 }
 
-export function unwrap<T extends object>(value: T): Unwrap<T>
-export function unwrap(value: any) {
+export function unwrap<T extends object>(value: T, seal?: boolean): Unwrap<T>
+export function unwrap(value: any, seal = true) {
   if (process.env.NODE_ENV !== 'production') {
     assert(value, `[PANIC] Falsy value cannot be unwrapped.`)
     assert(!isValue(value), `[PANIC] Value wrapper cannot be unwrapped.`)
@@ -63,6 +66,8 @@ export function unwrap(value: any) {
     }
   }
 
-  Object.seal(result)
+  if (seal) {
+    Object.seal(result)
+  }
   return result
 }

@@ -7,7 +7,8 @@ var value_1 = require("./value");
 var assert_1 = __importDefault(require("assert"));
 var lodash_1 = require("lodash");
 var utils_1 = require("./utils");
-function wrap(value) {
+function wrap(value, seal) {
+    if (seal === void 0) { seal = true; }
     if (process.env.NODE_ENV !== 'production') {
         assert_1.default(value, "[PANIC] Falsy value cannot be wrapped.");
         assert_1.default(!value_1.isValue(value), "[PANIC] Value wrapper cannot be wrapped.");
@@ -27,11 +28,14 @@ function wrap(value) {
             }
         }
     }
-    Object.seal(result);
+    if (seal) {
+        Object.seal(result);
+    }
     return result;
 }
 exports.wrap = wrap;
-function unwrap(value) {
+function unwrap(value, seal) {
+    if (seal === void 0) { seal = true; }
     if (process.env.NODE_ENV !== 'production') {
         assert_1.default(value, "[PANIC] Falsy value cannot be unwrapped.");
         assert_1.default(!value_1.isValue(value), "[PANIC] Value wrapper cannot be unwrapped.");
@@ -47,7 +51,9 @@ function unwrap(value) {
             Reflect.defineProperty(result, prop, descriptor);
         }
     }
-    Object.seal(result);
+    if (seal) {
+        Object.seal(result);
+    }
     return result;
 }
 exports.unwrap = unwrap;
