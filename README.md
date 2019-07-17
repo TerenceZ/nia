@@ -155,7 +155,7 @@ function RootModule(context: CustomContext) {
 
   service(function*() {
     while (1) {
-      const { payload } = yield take(sub.deeperProps.someEvent)
+      const { payload } = yield take(sub.deeperProps.someEvent.action)
       console.log(payload)
     }
   })
