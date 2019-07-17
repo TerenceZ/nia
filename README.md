@@ -25,7 +25,7 @@ interface CustomContext {
   a: number
 }
 
-function SubB(context: CustomContext) {
+function SubModule(context: CustomContext) {
   const someState = state({ a: 0 /* ... */ })
 
   // acccess value through `someValue.value`
@@ -137,12 +137,12 @@ function SubB(context: CustomContext) {
   }
 }
 
-function Model(context: CustomContext) {
-  // import things from SubB.
-  const sub = module(SubB, context)
+function RootModule(context: CustomContext) {
+  // import things from SubModule.
+  const sub = module(SubModule, context)
 
   // You can use module more than once.
-  const aotherSub = module(SubB, { a: 567 })
+  const aotherSub = module(SubModule, { a: 567 })
 
   const someRootState = state({
     /* ... */
@@ -170,7 +170,7 @@ function Model(context: CustomContext) {
 }
 
 // Create a store instance.
-const store = init(() => Model({ a: 123 }), {
+const store = init(() => RootModule({ a: 123 }), {
   plugins: [
     /* Vuex Store Plugins */
   ],
