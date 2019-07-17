@@ -15,6 +15,7 @@ import {
   unwrap,
   init,
   computed,
+  install,
 } from 'vuex-nia'
 import { put, delay, take } from 'redux-saga/effects'
 import { Task } from 'redux-saga'
@@ -198,6 +199,10 @@ const App = Vue.extend({
     )
   },
 })
+
+// Install plugin.
+Vue.use(install)
+
 // Start app.
 const app = new Vue({
   // for vuex

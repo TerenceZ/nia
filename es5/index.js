@@ -18,3 +18,4 @@ __export(require("./subscribe"));
 __export(require("./value"));
 __export(require("./watch"));
 __export(require("./wrap"));
+__export(require("./install"));

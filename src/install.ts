@@ -1,7 +1,7 @@
 import Vue, { VueConstructor } from 'vue' // eslint-disable-line @typescript-eslint/no-unused-vars
 import Vuex from 'vuex'
 
-export default function install(Vue: VueConstructor<Vue>) {
+export function install(Vue: VueConstructor<Vue>) {
   const initStorePlugin = function() {
     const options = this.$options
     // store injection
