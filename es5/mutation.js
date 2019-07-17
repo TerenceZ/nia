@@ -8,7 +8,7 @@ var context_1 = require("./context");
  */
 function mutation(mutation) {
     var context = context_1.getContext();
-    var type = lodash_1.uniqueId((mutation.name || "m") + "#");
+    var type = lodash_1.uniqueId((mutation.name || 'm') + "#");
     var runtime = context.runtime;
     context.mutations[type] = function onMutationCommit(_, payload) {
         return mutation(payload);

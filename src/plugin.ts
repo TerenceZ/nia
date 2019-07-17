@@ -1,17 +1,17 @@
-import Vue, { VueConstructor } from "vue"; // eslint-disable-line @typescript-eslint/no-unused-vars
-import Vuex from "vuex";
+import Vue, { VueConstructor } from 'vue' // eslint-disable-line @typescript-eslint/no-unused-vars
+import Vuex from 'vuex'
 
 export default function install(Vue: VueConstructor<Vue>) {
   const initStorePlugin = function() {
-    const options = this.$options;
+    const options = this.$options
     // store injection
     if (options.$) {
-      this.$ = options.$;
+      this.$ = options.$
     } else if (options.parent && options.parent.$) {
-      this.$ = options.parent.$;
+      this.$ = options.parent.$
     }
-  } as (this: Vue) => void;
+  } as (this: Vue) => void
 
-  Vue.mixin({ beforeCreate: initStorePlugin });
-  Vue.use(Vuex);
+  Vue.mixin({ beforeCreate: initStorePlugin })
+  Vue.use(Vuex)
 }

@@ -50,12 +50,13 @@ var lodash_1 = require("lodash");
 var computed_1 = require("./computed");
 var effects_1 = require("redux-saga/effects");
 var utils_1 = require("./utils");
+var wrap_1 = require("./wrap");
 /**
  * Init a module.
  */
 function init(mod, options) {
     if (options === void 0) { options = {}; }
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
         assert_1.default(!context_1.getContext(), "[PANIC] Failed to invoke init() cannot because another init() is being called.");
     }
     try {
@@ -75,7 +76,7 @@ function init(mod, options) {
         var stopActions_1 = runContextActions(context, options);
         // Inject extra props.
         var vm_1 = context.vm;
-        var store_1 = value_1.unwrap(instance);
+        var store_1 = wrap_1.unwrap(instance);
         store_1.$store = vstore;
         store_1.$stop = function () {
             store_1.$stop = utils_1.noop;
@@ -93,30 +94,31 @@ exports.init = init;
 function extractStoreOptionsFromModule(mod) {
     var state = {};
     var getters = {};
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
         var walk_1 = function (obj, path) {
             for (var prop in obj) {
                 if (Reflect.has(obj, prop)) {
                     var descriptor = Reflect.getOwnPropertyDescriptor(obj, prop);
-                    var key = path.length ? path.join("/") + "/" + prop : prop;
+                    var key = path.length ? path.join('/') + "/" + prop : prop;
                     if (!descriptor.get) {
                         var value = descriptor.value;
                         if (value) {
-                            if (computed_1.isComputed(value)) {
-                                getters[key] = Reflect.getOwnPropertyDescriptor(value, "value").get;
+                            if (value_1.isValue(value)) {
+                                descriptor = Reflect.getOwnPropertyDescriptor(value, 'value');
                             }
-                            else if (value_1.isValue(value)) {
-                                Reflect.defineProperty(state, key, Reflect.getOwnPropertyDescriptor(value, "value"));
-                            }
-                            else if (value.__ob__) {
-                                Reflect.defineProperty(state, key, descriptor);
-                            }
-                            else if (lodash_1.isPlainObject(value)) {
-                                walk_1(value, path.concat([prop]));
+                            else {
+                                if (value.__ob__) {
+                                    Reflect.defineProperty(state, key, descriptor);
+                                    continue;
+                                }
+                                if (lodash_1.isPlainObject(value)) {
+                                    walk_1(value, path.concat([prop]));
+                                    continue;
+                                }
                             }
                         }
                     }
-                    else if (computed_1.isComputedGetter(descriptor.get)) {
+                    if (computed_1.isComputedGetter(descriptor.get)) {
                         getters[key] = descriptor.get;
                     }
                     else if (value_1.isValueGetter(descriptor.get)) {
@@ -134,7 +136,7 @@ function runContextActions(context, options) {
     // Start sagas.
     var task = redux_saga_1.runSaga(lodash_1.assign({
         channel: runtime.chan,
-        dispatch: lodash_1.bind(runtime.store.dispatch, runtime.store)
+        dispatch: lodash_1.bind(runtime.store.dispatch, runtime.store),
     }, options.saga), createRootSaga(context.services));
     // Invoke subscriptions.
     var unsub = lodash_1.flowRight(context.subs.map(function (sub) { return sub() || utils_1.noop; }));
@@ -157,7 +159,7 @@ function createRootSaga(sagas) {
 }
 function createHotReload(store, options) {
     return function (mod) {
-        if (process.env.NODE_ENV === "production") {
+        if (process.env.NODE_ENV === 'production') {
             return store;
         }
         try {
@@ -176,7 +178,7 @@ function createHotReload(store, options) {
             var stopActions_2 = runContextActions(context, options);
             // Inject extra props.
             var vm_2 = context.vm;
-            var nextStore = value_1.unwrap(instance);
+            var nextStore = wrap_1.unwrap(instance);
             // Copy new module props into store.
             for (var prop in nextStore) {
                 if (Reflect.has(nextStore, prop)) {

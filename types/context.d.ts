@@ -1,6 +1,6 @@
-import { Saga, MulticastChannel } from "redux-saga";
-import Vue from "vue";
-import { Store } from "vuex";
+import { Saga, MulticastChannel } from 'redux-saga';
+import Vue from 'vue';
+import { Store } from 'vuex';
 export interface Context {
     actions: Record<string, (_: any, payload: any) => any>;
     mutations: Record<string, (state: any, payload: any) => void>;

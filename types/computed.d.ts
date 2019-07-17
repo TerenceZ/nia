@@ -1,4 +1,4 @@
-import { ValueWrapper } from "./value";
+import { ValueWrapper } from './value';
 export interface ComputedOptions<T = any> {
     get: () => T;
     set?: (value: T) => void;

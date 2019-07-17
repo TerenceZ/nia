@@ -11,7 +11,7 @@ var assert_1 = __importDefault(require("assert"));
  */
 function state(target) {
     var state = vue_1.default.observable(target);
-    if (process.env.NODE_ENV !== "production" && context_1.getContext().strict) {
+    if (process.env.NODE_ENV !== 'production' && context_1.getContext().strict) {
         var context = context_1.getContext();
         var runtime_1 = context.runtime;
         context.vm.$watch(function () { return state; }, function () {

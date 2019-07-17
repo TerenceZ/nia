@@ -1,7 +1,7 @@
-import { Context } from "./context";
-import { Store as VuexStore, Plugin } from "vuex";
-import { RunSagaOptions } from "redux-saga";
-import { Unwrap } from "./value";
+import { Context } from './context';
+import { Store as VuexStore, Plugin } from 'vuex';
+import { RunSagaOptions } from 'redux-saga';
+import { Unwrap } from './wrap';
 export interface InitOptions<C extends Context = Context> {
     context?: () => C;
     plugins?: Plugin<any>[];

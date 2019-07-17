@@ -1,4 +1,4 @@
-import { SubscribeActionOptions } from "vuex";
+import { SubscribeActionOptions } from 'vuex';
 /**
  * Subscribe on each dispatched action.
  */

@@ -28,7 +28,7 @@ function watch(target, cb, opts) {
     return subscribe_1.subscribe(function () {
         var watcher = new utils_1.Watcher(vm, getter, update, {
             deep: opts.deep,
-            sync: opts.flush === "sync"
+            sync: opts.flush === 'sync',
         });
         if (!opts.lazy) {
             update(watcher.value, undefined);
@@ -73,7 +73,7 @@ function createWatchUpdaterAndCleaner(update) {
         }
     };
     var onCleanup = function (cb) {
-        if (process.env.NODE_ENV !== "production") {
+        if (process.env.NODE_ENV !== 'production') {
             assert_1.default(clean === utils_1.noop, "[PANIC] Only one cleanup function can be set on one update call.");
         }
         clean = cb;

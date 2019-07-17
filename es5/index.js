@@ -17,3 +17,4 @@ __export(require("./state"));
 __export(require("./subscribe"));
 __export(require("./value"));
 __export(require("./watch"));
+__export(require("./wrap"));

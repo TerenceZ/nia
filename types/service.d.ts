@@ -1,4 +1,4 @@
-import { Saga } from "redux-saga";
+import { Saga } from 'redux-saga';
 /**
  * Create a service to run.
  */

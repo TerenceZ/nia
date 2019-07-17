@@ -5,7 +5,7 @@ var context_1 = require("./context");
 var utils_1 = require("./utils");
 function action(cb, creator) {
     var context = context_1.getContext();
-    var type = lodash_1.uniqueId(((creator && creator.name) || cb.name || "a") + "#");
+    var type = lodash_1.uniqueId(((creator && creator.name) || cb.name || 'a') + "#");
     var runtime = context.runtime;
     if (!creator) {
         creator = utils_1.identity;
@@ -13,7 +13,7 @@ function action(cb, creator) {
     var action = function createAction() {
         return {
             type: type,
-            payload: Reflect.apply(creator, null, arguments)
+            payload: Reflect.apply(creator, null, arguments),
         };
     };
     action.type = type;
@@ -21,7 +21,7 @@ function action(cb, creator) {
     var dispatch = function dispatchAction() {
         return runtime.store.dispatch({
             type: type,
-            payload: Reflect.apply(creator, null, arguments)
+            payload: Reflect.apply(creator, null, arguments),
         });
     };
     dispatch.action = action;

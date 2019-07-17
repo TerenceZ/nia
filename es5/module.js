@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var value_1 = require("./value");
+var wrap_1 = require("./wrap");
 /**
  * Use a module.
  */
@@ -9,6 +9,6 @@ function module(mod) {
     for (var _i = 1; _i < arguments.length; _i++) {
         args[_i - 1] = arguments[_i];
     }
-    return value_1.unwrap(Reflect.apply(mod, null, args));
+    return wrap_1.unwrap(Reflect.apply(mod, null, args));
 }
 exports.module = module;

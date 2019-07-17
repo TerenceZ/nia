@@ -1,4 +1,4 @@
-import { ActionDispatcher } from "./action";
+import { ActionDispatcher } from './action';
 /**
  * Create an action used to communicate with other moddules or services.
  */

@@ -14,10 +14,10 @@ new vue_1.default({
     computed: {
         f: function () {
             return this.v;
-        }
+        },
     },
     render: function (c) {
-        return c("a");
+        return c('a');
     },
     mounted: function () {
         // Trigger lazy watcher to collect deps.
@@ -25,11 +25,14 @@ new vue_1.default({
         var watcher = this._watchers[0];
         exports.Watcher = Watcher = watcher.constructor;
         exports.Dep = Dep = watcher.deps[0].constructor;
-    }
+    },
 }).$mount();
 function defineTagProperty(target, name) {
     Reflect.defineProperty(target, name, {
-        value: true
+        value: true,
+        configurable: true,
+        enumerable: false,
+        writable: false,
     });
     return target;
 }

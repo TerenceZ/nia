@@ -25,8 +25,8 @@ function createDefaultContext() {
         // runtime is setup from init().
         runtime: {
             store: null,
-            chan: null
-        }
+            chan: null,
+        },
     };
 }
 exports.createDefaultContext = createDefaultContext;

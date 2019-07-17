@@ -4,12 +4,12 @@ var value_1 = require("./value");
 var utils_1 = require("./utils");
 var context_1 = require("./context");
 var lodash_1 = require("lodash");
-var COMPUTED_TAG = Symbol(process.env.NODE_ENV !== "production" ? "Computed" : "");
-var COMPUTED_GETTER_TAG = Symbol(process.env.NODE_ENV !== "production" ? "ComputedGetter" : "");
+var COMPUTED_TAG = Symbol(process.env.NODE_ENV !== 'production' ? 'Computed' : '');
+var COMPUTED_GETTER_TAG = Symbol(process.env.NODE_ENV !== 'production' ? 'ComputedGetter' : '');
 var computedWatcherOptions = { lazy: true };
 var computedPropertyOptions = {
     configurable: true,
-    enumerable: true
+    enumerable: true,
 };
 /**
  * Define a computed value wrapper.
@@ -28,11 +28,11 @@ function computed(get, set) {
         }
         return watcher.value;
     };
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
         utils_1.defineTagProperty(computedPropertyOptions.get, value_1.VALUE_GETTER_TAG);
         utils_1.defineTagProperty(computedPropertyOptions.get, COMPUTED_GETTER_TAG);
     }
-    Reflect.defineProperty(computed, "value", computedPropertyOptions);
+    Reflect.defineProperty(computed, 'value', computedPropertyOptions);
     utils_1.defineTagProperty(computed, value_1.VALUE_TAG);
     utils_1.defineTagProperty(computed, COMPUTED_TAG);
     return computed;
