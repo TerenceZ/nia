@@ -2,6 +2,7 @@ export * from './action';
 export * from './computed';
 export * from './context';
 export * from './event';
+export * from './getter';
 export * from './init';
 export * from './module';
 export * from './mutation';
